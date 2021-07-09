@@ -4,6 +4,7 @@ interface NotifyOptions {
   type?: 'primary' | 'success' | 'danger' | 'warning';
   color?: string;
   zIndex?: number;
+  top?: number;
   message: string;
   context?: any;
   duration?: number;
@@ -15,21 +16,28 @@ interface NotifyOptions {
   onClose?: () => void;
 }
 
-const defaultOptions = {
+const defaultOptions: NotifyOptions = {
   selector: '#van-notify',
   type: 'danger',
   message: '',
   background: '',
   duration: 3000,
   zIndex: 110,
+  top: 0,
   color: WHITE,
   safeAreaInsetTop: false,
   onClick: () => {},
   onOpened: () => {},
-  onClose: () => {}
+  onClose: () => {},
 };
 
-function parseOptions(message: NotifyOptions | string): NotifyOptions {
+function parseOptions(
+  message?: NotifyOptions | string
+): Partial<NotifyOptions> {
+  if (message == null) {
+    return {};
+  }
+
   return typeof message === 'string' ? { message } : message;
 }
 
@@ -39,7 +47,7 @@ function getContext() {
 }
 
 export default function Notify(options: NotifyOptions | string) {
-  options = { ...defaultOptions, ...parseOptions(options) } as NotifyOptions;
+  options = { ...defaultOptions, ...parseOptions(options) };
 
   const context = options.context || getContext();
   const notify = context.selectComponent(options.selector);
@@ -56,8 +64,8 @@ export default function Notify(options: NotifyOptions | string) {
   console.warn('未找到 van-notify 节点，请确认 selector 及 context 是否正确');
 }
 
-Notify.clear = function(options?: NotifyOptions) {
-  options = { ...defaultOptions, ...parseOptions(options) } as NotifyOptions;
+Notify.clear = function (options?: NotifyOptions) {
+  options = { ...defaultOptions, ...parseOptions(options) };
 
   const context = options.context || getContext();
   const notify = context.selectComponent(options.selector);

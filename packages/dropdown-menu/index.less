@@ -3,6 +3,7 @@
 
 .van-dropdown-menu {
   display: flex;
+  box-shadow: 0 2px 12px fade(@gray-7, 12);
   user-select: none;
   .theme(height, '@dropdown-menu-height');
   .theme(background-color, '@dropdown-menu-background-color');
@@ -15,7 +16,7 @@
     min-width: 0; // hack for flex ellipsis
 
     &:active {
-      opacity: .7;
+      opacity: 0.7;
     }
 
     &--disabled {
@@ -46,7 +47,7 @@
       border: 3px solid;
       border-color: transparent transparent currentColor currentColor;
       transform: rotate(-45deg);
-      opacity: .8;
+      opacity: 0.8;
       content: '';
     }
 

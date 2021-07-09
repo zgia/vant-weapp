@@ -1,6 +1,10 @@
+import { useParent } from '../common/relation';
 import { VantComponent } from '../common/component';
 
-function emit(target: WechatMiniprogram.Component.TrivialInstance, value: boolean | any[]) {
+function emit(
+  target: WechatMiniprogram.Component.TrivialInstance,
+  value: boolean | any[]
+) {
   target.$emit('input', value);
   target.$emit('change', value);
 }
@@ -8,11 +12,7 @@ function emit(target: WechatMiniprogram.Component.TrivialInstance, value: boolea
 VantComponent({
   field: true,
 
-  relation: {
-    name: 'checkbox-group',
-    type: 'ancestor',
-    current: 'checkbox',
-  },
+  relation: useParent('checkbox-group'),
 
   classes: ['icon-class', 'label-class'],
 
@@ -21,20 +21,24 @@ VantComponent({
     disabled: Boolean,
     useIconSlot: Boolean,
     checkedColor: String,
-    labelPosition: String,
+    labelPosition: {
+      type: String,
+      value: 'right',
+    },
     labelDisabled: Boolean,
     shape: {
       type: String,
-      value: 'round'
+      value: 'round',
     },
     iconSize: {
       type: null,
-      value: 20
-    }
+      value: 20,
+    },
   },
 
   data: {
-    parentDisabled: false
+    parentDisabled: false,
+    direction: 'vertical',
   },
 
   methods: {
@@ -60,7 +64,10 @@ VantComponent({
       }
     },
 
-    setParentValue(parent: WechatMiniprogram.Component.TrivialInstance, value: boolean) {
+    setParentValue(
+      parent: WechatMiniprogram.Component.TrivialInstance,
+      value: boolean
+    ) {
       const parentValue = parent.data.value.slice();
       const { name } = this.data;
       const { max } = parent.data;
@@ -81,6 +88,6 @@ VantComponent({
           emit(parent, parentValue);
         }
       }
-    }
-  }
+    },
+  },
 });

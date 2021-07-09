@@ -1,89 +1,80 @@
 import { VantComponent } from '../common/component';
-import { Weapp } from 'definitions/weapp';
-import { addUnit } from '../common/utils';
+import { useChildren } from '../common/relation';
+import { addUnit, getRect, getSystemInfoSync } from '../common/utils';
 
-type TrivialInstance = WechatMiniprogram.Component.TrivialInstance;
-let ARRAY: TrivialInstance[] = [];
+let ARRAY: WechatMiniprogram.Component.TrivialInstance[] = [];
 
 VantComponent({
   field: true,
 
-  relation: {
-    name: 'dropdown-item',
-    type: 'descendant',
-    current: 'dropdown-menu',
-    linked() {
-      this.updateItemListData();
-    },
-    unlinked() {
-      this.updateItemListData();
-    }
-  },
+  relation: useChildren('dropdown-item', function () {
+    this.updateItemListData();
+  }),
 
   props: {
     activeColor: {
       type: String,
-      observer: 'updateChildrenData'
+      observer: 'updateChildrenData',
     },
     overlay: {
       type: Boolean,
       value: true,
-      observer: 'updateChildrenData'
+      observer: 'updateChildrenData',
     },
     zIndex: {
       type: Number,
-      value: 10
+      value: 10,
     },
     duration: {
       type: Number,
       value: 200,
-      observer: 'updateChildrenData'
+      observer: 'updateChildrenData',
     },
     direction: {
       type: String,
       value: 'down',
-      observer: 'updateChildrenData'
+      observer: 'updateChildrenData',
     },
     closeOnClickOverlay: {
       type: Boolean,
       value: true,
-      observer: 'updateChildrenData'
+      observer: 'updateChildrenData',
     },
     closeOnClickOutside: {
       type: Boolean,
-      value: true
-    }
+      value: true,
+    },
   },
 
   data: {
-    itemListData: []
+    itemListData: [] as Record<string, unknown>[],
   },
 
   beforeCreate() {
-    const { windowHeight } = wx.getSystemInfoSync();
+    const { windowHeight } = getSystemInfoSync();
     this.windowHeight = windowHeight;
     ARRAY.push(this);
   },
 
   destroyed() {
-    ARRAY = ARRAY.filter(item => item !== this);
+    ARRAY = ARRAY.filter((item) => item !== this);
   },
 
   methods: {
     updateItemListData() {
       this.setData({
-        itemListData: this.children.map((child: TrivialInstance) => child.data)
+        itemListData: this.children.map((child) => child.data),
       });
     },
 
     updateChildrenData() {
-      this.children.forEach((child: TrivialInstance) => {
+      this.children.forEach((child) => {
         child.updateDataFromParent();
       });
     },
 
     toggleItem(active: number) {
-      this.children.forEach((item: TrivialInstance, index: number) => {
+      this.children.forEach((item, index) => {
         const { showPopup } = item.data;
         if (index === active) {
           item.toggle();
@@ -94,7 +85,7 @@ VantComponent({
     },
 
     close() {
-      this.children.forEach((child: TrivialInstance) => {
+      this.children.forEach((child) => {
         child.toggle(false, { immediate: true });
       });
     },
@@ -102,30 +93,28 @@ VantComponent({
     getChildWrapperStyle() {
       const { zIndex, direction } = this.data;
 
-      return this.getRect('.van-dropdown-menu').then(
-        (rect: WechatMiniprogram.BoundingClientRectCallbackResult) => {
-          const { top = 0, bottom = 0 } = rect;
-          const offset = direction === 'down' ? bottom : this.windowHeight - top;
+      return getRect(this, '.van-dropdown-menu').then((rect) => {
+        const { top = 0, bottom = 0 } = rect;
+        const offset = direction === 'down' ? bottom : this.windowHeight - top;
 
-          let wrapperStyle = `z-index: ${zIndex};`;
+        let wrapperStyle = `z-index: ${zIndex};`;
 
-          if (direction === 'down') {
-            wrapperStyle += `top: ${addUnit(offset)};`;
-          } else {
-            wrapperStyle += `bottom: ${addUnit(offset)};`;
-          }
-
-          return wrapperStyle;
+        if (direction === 'down') {
+          wrapperStyle += `top: ${addUnit(offset)};`;
+        } else {
+          wrapperStyle += `bottom: ${addUnit(offset)};`;
         }
-      );
+
+        return wrapperStyle;
+      });
     },
 
-    onTitleTap(event: Weapp.Event) {
+    onTitleTap(event: WechatMiniprogram.TouchEvent) {
       const { index } = event.currentTarget.dataset;
       const child = this.children[index];
 
       if (!child.data.disabled) {
-        ARRAY.forEach(menuItem => {
+        ARRAY.forEach((menuItem) => {
           if (
             menuItem &&
             menuItem.data.closeOnClickOutside &&
@@ -137,6 +126,6 @@ VantComponent({
 
         this.toggleItem(index);
       }
-    }
-  }
+    },
+  },
 });

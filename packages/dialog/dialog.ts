@@ -1,13 +1,16 @@
-let queue = [];
+let queue: WechatMiniprogram.Component.TrivialInstance[] = [];
+export type Action = 'confirm' | 'cancel' | 'overlay';
 
-type DialogAction = 'confirm' | 'cancel';
-type DialogOptions = {
+interface DialogOptions {
   lang?: string;
   show?: boolean;
   title?: string;
-  width?: string | number;
+  width?: string | number | null;
   zIndex?: number;
-  context?: WechatMiniprogram.Page.TrivialInstance | WechatMiniprogram.Component.TrivialInstance;
+  theme?: string;
+  context?:
+    | WechatMiniprogram.Page.TrivialInstance
+    | WechatMiniprogram.Component.TrivialInstance;
   message?: string;
   overlay?: boolean;
   selector?: string;
@@ -15,7 +18,11 @@ type DialogOptions = {
   className?: string;
   customStyle?: string;
   transition?: string;
+  /**
+   * @deprecated use beforeClose instead
+   */
   asyncClose?: boolean;
+  beforeClose?: null | ((action: Action) => Promise<void> | void);
   businessId?: number;
   sessionFrom?: string;
   overlayStyle?: string;
@@ -33,60 +40,18 @@ type DialogOptions = {
   confirmButtonOpenType?: string;
 }
 
-interface Dialog {
-  (options: DialogOptions): Promise<DialogAction>;
-  alert?: (options: DialogOptions) => Promise<DialogAction>;
-  confirm?: (options: DialogOptions) => Promise<DialogAction>;
-  close?: () => void;
-  stopLoading?: () => void;
-  install?: () => void;
-  setDefaultOptions?: (options: DialogOptions) => void;
-  resetDefaultOptions?: () => void;
-  defaultOptions?: DialogOptions;
-  currentOptions?: DialogOptions;
-}
-
-function getContext() {
-  const pages = getCurrentPages();
-  return pages[pages.length - 1];
-}
-
-const Dialog: Dialog = options => {
-  options = {
-    ...Dialog.currentOptions,
-    ...options
-  };
-
-  return new Promise((resolve, reject) => {
-    const context = options.context || getContext();
-    const dialog = context.selectComponent(options.selector);
-
-    delete options.context;
-    delete options.selector;
-
-    if (dialog) {
-      dialog.setData({
-        onCancel: reject,
-        onConfirm: resolve,
-        ...options
-      });
-      queue.push(dialog);
-    } else {
-      console.warn('未找到 van-dialog 节点，请确认 selector 及 context 是否正确');
-    }
-  });
-};
-
-Dialog.defaultOptions = {
-  show: true,
+const defaultOptions: DialogOptions = {
+  show: false,
   title: '',
   width: null,
+  theme: 'default',
   message: '',
   zIndex: 100,
   overlay: true,
   selector: '#van-dialog',
   className: '',
   asyncClose: false,
+  beforeClose: null,
   transition: 'scale',
   customStyle: '',
   messageAlign: '',
@@ -96,36 +61,87 @@ Dialog.defaultOptions = {
   showConfirmButton: true,
   showCancelButton: false,
   closeOnClickOverlay: false,
-  confirmButtonOpenType: ''
+  confirmButtonOpenType: '',
 };
 
-Dialog.alert = Dialog;
+let currentOptions: DialogOptions = { ...defaultOptions };
 
-Dialog.confirm = options =>
+function getContext() {
+  const pages = getCurrentPages();
+  return pages[pages.length - 1];
+}
+
+const Dialog = (options: DialogOptions) => {
+  options = {
+    ...currentOptions,
+    ...options,
+  };
+
+  return new Promise<WechatMiniprogram.Component.TrivialInstance>(
+    (resolve, reject) => {
+      const context = options.context || getContext();
+      const dialog = context.selectComponent(options.selector as string);
+
+      delete options.context;
+      delete options.selector;
+
+      if (dialog) {
+        dialog.setData({
+          callback: (
+            action: Action,
+            instance: WechatMiniprogram.Component.TrivialInstance
+          ) => {
+            action === 'confirm' ? resolve(instance) : reject(instance);
+          },
+          ...options,
+        });
+
+        wx.nextTick(() => {
+          dialog.setData({ show: true });
+        });
+
+        queue.push(dialog);
+      } else {
+        console.warn(
+          '未找到 van-dialog 节点，请确认 selector 及 context 是否正确'
+        );
+      }
+    }
+  );
+};
+
+Dialog.alert = (options: DialogOptions) => Dialog(options);
+
+Dialog.confirm = (options: DialogOptions) =>
   Dialog({
     showCancelButton: true,
-    ...options
+    ...options,
   });
 
 Dialog.close = () => {
-  queue.forEach(dialog => {
+  queue.forEach((dialog) => {
     dialog.close();
   });
   queue = [];
 };
 
 Dialog.stopLoading = () => {
-  queue.forEach(dialog => {
+  queue.forEach((dialog) => {
     dialog.stopLoading();
   });
 };
 
-Dialog.setDefaultOptions = options => {
-  Object.assign(Dialog.currentOptions, options);
+Dialog.currentOptions = currentOptions;
+Dialog.defaultOptions = defaultOptions;
+
+Dialog.setDefaultOptions = (options: DialogOptions) => {
+  currentOptions = { ...currentOptions, ...options };
+  Dialog.currentOptions = currentOptions;
 };
 
 Dialog.resetDefaultOptions = () => {
-  Dialog.currentOptions = { ...Dialog.defaultOptions };
+  currentOptions = { ...defaultOptions };
+  Dialog.currentOptions = currentOptions;
 };
 
 Dialog.resetDefaultOptions();

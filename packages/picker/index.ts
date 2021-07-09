@@ -1,9 +1,8 @@
 import { VantComponent } from '../common/component';
 import { pickerProps } from './shared';
-import { Weapp } from 'definitions/weapp';
 
 interface Column {
-  values: object[];
+  values: any[];
   defaultIndex?: number;
 }
 
@@ -14,32 +13,33 @@ VantComponent({
     ...pickerProps,
     valueKey: {
       type: String,
-      value: 'text'
+      value: 'text',
     },
     toolbarPosition: {
       type: String,
-      value: 'top'
+      value: 'top',
     },
     defaultIndex: {
       type: Number,
-      value: 0
+      value: 0,
     },
     columns: {
       type: Array,
       value: [],
       observer(columns = []) {
         this.simple = columns.length && !columns[0].values;
-        this.children = this.selectAllComponents('.van-picker__column');
 
         if (Array.isArray(this.children) && this.children.length) {
           this.setColumns().catch(() => {});
         }
-      }
-    }
+      },
+    },
   },
 
   beforeCreate() {
-    this.children = [];
+    Object.defineProperty(this, 'children', {
+      get: () => this.selectAllComponents('.van-picker__column') || [],
+    });
   },
 
   methods: {
@@ -54,33 +54,33 @@ VantComponent({
       return Promise.all(stack);
     },
 
-    emit(event: Weapp.Event) {
+    emit(event: WechatMiniprogram.TouchEvent) {
       const { type } = event.currentTarget.dataset;
       if (this.simple) {
         this.$emit(type, {
           value: this.getColumnValue(0),
-          index: this.getColumnIndex(0)
+          index: this.getColumnIndex(0),
         });
       } else {
         this.$emit(type, {
           value: this.getValues(),
-          index: this.getIndexes()
+          index: this.getIndexes(),
         });
       }
     },
 
-    onChange(event: Weapp.Event) {
+    onChange(event: WechatMiniprogram.CustomEvent) {
       if (this.simple) {
         this.$emit('change', {
           picker: this,
           value: this.getColumnValue(0),
-          index: this.getColumnIndex(0)
+          index: this.getColumnIndex(0),
         });
       } else {
         this.$emit('change', {
           picker: this,
           value: this.getValues(),
-          index: event.currentTarget.dataset.index
+          index: event.currentTarget.dataset.index,
         });
       }
     },
@@ -152,11 +152,11 @@ VantComponent({
 
     // get values of all columns
     getValues() {
-      return this.children.map((child: WechatMiniprogram.Component.TrivialInstance) => child.getValue());
+      return this.children.map((child) => child.getValue());
     },
 
     // set values of all columns
-    setValues(values: []) {
+    setValues(values: any[]) {
       const stack = values.map((value, index) =>
         this.setColumnValue(index, value)
       );
@@ -165,9 +165,7 @@ VantComponent({
 
     // get indexes of all columns
     getIndexes() {
-      return this.children.map(
-        (child: WechatMiniprogram.Component.TrivialInstance) => child.data.currentIndex
-      );
+      return this.children.map((child) => child.data.currentIndex);
     },
 
     // set indexes of all columns
@@ -176,6 +174,6 @@ VantComponent({
         this.setColumnIndex(columnIndex, optionIndex)
       );
       return Promise.all(stack);
-    }
-  }
+    },
+  },
 });

@@ -1,6 +1,5 @@
 import { VantComponent } from '../common/component';
 import { touch } from '../mixins/touch';
-import { Weapp } from 'definitions/weapp';
 import { range } from '../common/utils';
 
 const THRESHOLD = 0.3;
@@ -16,7 +15,7 @@ VantComponent({
         if (this.offset > 0) {
           this.swipeMove(leftWidth);
         }
-      }
+      },
     },
     rightWidth: {
       type: Number,
@@ -25,19 +24,20 @@ VantComponent({
         if (this.offset < 0) {
           this.swipeMove(-rightWidth);
         }
-      }
+      },
     },
     asyncClose: Boolean,
     name: {
-      type: [Number, String],
-      value: ''
-    }
+      type: null,
+      value: '',
+    },
   },
 
   mixins: [touch],
 
   data: {
-    catchMove: false
+    catchMove: false,
+    wrapperStyle: '',
   },
 
   created() {
@@ -46,7 +46,7 @@ VantComponent({
   },
 
   destroyed() {
-    ARRAY = ARRAY.filter(item => item !== this);
+    ARRAY = ARRAY.filter((item) => item !== this);
   },
 
   methods: {
@@ -57,7 +57,7 @@ VantComponent({
 
       this.$emit('open', {
         position,
-        name: this.data.name
+        name: this.data.name,
       });
     },
 
@@ -65,7 +65,7 @@ VantComponent({
       this.swipeMove(0);
     },
 
-    swipeMove(offset: number = 0) {
+    swipeMove(offset = 0) {
       this.offset = range(offset, -this.data.rightWidth, this.data.leftWidth);
 
       const transform = `translate3d(${this.offset}px, 0, 0)`;
@@ -79,7 +79,7 @@ VantComponent({
         -webkit-transition: ${transition};
         transform: ${transform};
         transition: ${transition};
-      `
+      `,
       });
     },
 
@@ -97,7 +97,7 @@ VantComponent({
       this.setData({ catchMove: false });
     },
 
-    startDrag(event: Weapp.TouchEvent) {
+    startDrag(event: WechatMiniprogram.TouchEvent) {
       if (this.data.disabled) {
         return;
       }
@@ -108,7 +108,7 @@ VantComponent({
 
     noop() {},
 
-    onDrag(event: Weapp.TouchEvent) {
+    onDrag(event: WechatMiniprogram.TouchEvent) {
       if (this.data.disabled) {
         return;
       }
@@ -120,7 +120,11 @@ VantComponent({
       }
 
       this.dragging = true;
-      ARRAY.filter(item => item !== this).forEach(item => item.close());
+
+      ARRAY.filter(
+        (item) => item !== this && item.offset !== 0
+      ).forEach((item) => item.close());
+
       this.setData({ catchMove: true });
       this.swipeMove(this.startOffset + this.deltaX);
     },
@@ -134,7 +138,7 @@ VantComponent({
       this.swipeLeaveTransition();
     },
 
-    onClick(event: Weapp.Event) {
+    onClick(event: WechatMiniprogram.TouchEvent) {
       const { key: position = 'outside' } = event.currentTarget.dataset;
       this.$emit('click', position);
 
@@ -146,11 +150,11 @@ VantComponent({
         this.$emit('close', {
           position,
           instance: this,
-          name: this.data.name
+          name: this.data.name,
         });
       } else {
         this.swipeMove(0);
       }
-    }
-  }
+    },
+  },
 });

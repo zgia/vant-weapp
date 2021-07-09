@@ -12,6 +12,18 @@
     &--scrollable {
       .van-tab {
         flex: 0 0 22%;
+
+        &--complete {
+          flex: 1 0 auto !important;
+          padding: 0 @padding-sm;
+        }
+      }
+
+      .van-tabs__nav {
+        &--complete {
+          padding-right: 8px;
+          padding-left: 8px;
+        }
       }
     }
   }
@@ -21,11 +33,16 @@
 
     &--line {
       box-sizing: content-box;
-      height: calc(100% + 15px); /* 15px padding to hide scrollbar in mobile safari */
+      // 15px padding to hide scrollbar in mobile safari
+      height: calc(100% + 15px);
     }
 
     &--card {
       .theme(margin, '0 @padding-md');
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
     }
   }
 
@@ -78,7 +95,7 @@
 
     &--animated {
       display: flex;
-      transition-property: transform;
+      transition-property: left;
     }
   }
 
@@ -118,10 +135,6 @@
 
   &--disabled {
     .theme(color, '@tab-disabled-text-color');
-  }
-
-  &--complete {
-    flex: 1 0 auto !important;
   }
 
   &__title {

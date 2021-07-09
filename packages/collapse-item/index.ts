@@ -1,15 +1,11 @@
 import { VantComponent } from '../common/component';
-
-const nextTick = () => new Promise(resolve => setTimeout(resolve, 20));
+import { useParent } from '../common/relation';
+import { setContentAnimate } from './animate';
 
 VantComponent({
   classes: ['title-class', 'content-class'],
 
-  relation: {
-    name: 'collapse',
-    type: 'ancestor',
-    current: 'collapse-item',
-  },
+  relation: useParent('collapse'),
 
   props: {
     name: null,
@@ -21,38 +17,27 @@ VantComponent({
     clickable: Boolean,
     border: {
       type: Boolean,
-      value: true
+      value: true,
     },
     isLink: {
       type: Boolean,
-      value: true
-    }
+      value: true,
+    },
   },
 
   data: {
-    contentHeight: 0,
     expanded: false,
-    transition: false
   },
 
   mounted() {
-    this.updateExpanded()
-      .then(nextTick)
-      .then(() => {
-        const data: Record<string, boolean | string> = { transition: true };
-
-        if (this.data.expanded) {
-          data.contentHeight = 'auto';
-        }
-
-        this.setData(data);
-      });
+    this.updateExpanded();
+    this.mounted = true;
   },
 
   methods: {
     updateExpanded() {
       if (!this.parent) {
-        return Promise.resolve();
+        return;
       }
 
       const { value, accordion } = this.parent.data;
@@ -66,31 +51,11 @@ VantComponent({
         ? value === currentName
         : (value || []).some((name: string | number) => name === currentName);
 
-      const stack = [];
-
       if (expanded !== this.data.expanded) {
-        stack.push(this.updateStyle(expanded));
+        setContentAnimate(this, expanded, this.mounted);
       }
 
-      stack.push(this.set({ index, expanded }));
-
-      return Promise.all(stack);
-    },
-
-    updateStyle(expanded: boolean) {
-      return this.getRect('.van-collapse-item__content')
-        .then((rect: WechatMiniprogram.BoundingClientRectCallbackResult) => rect.height)
-        .then((height: number) => {
-          if (expanded) {
-            return this.set({
-              contentHeight: height ? `${height}px` : 'auto'
-            });
-          }
-
-          return this.set({ contentHeight: `${height}px` })
-            .then(nextTick)
-            .then(() => this.set({ contentHeight: 0 }));
-        });
+      this.setData({ index, expanded });
     },
 
     onClick() {
@@ -104,13 +69,5 @@ VantComponent({
 
       this.parent.switch(currentName, !expanded);
     },
-
-    onTransitionEnd() {
-      if (this.data.expanded) {
-        this.setData({
-          contentHeight: 'auto'
-        });
-      }
-    }
-  }
+  },
 });

@@ -1,5 +1,7 @@
 import { VantComponent } from '../common/component';
-import { isImageFile, isVideo } from './utils';
+import { isImageFile, chooseFile, isVideoFile, File } from './utils';
+import { chooseImageProps, chooseVideoProps } from './shared';
+import { isBoolean, isPromise } from '../common/validator';
 
 VantComponent({
   props: {
@@ -7,220 +9,213 @@ VantComponent({
     multiple: Boolean,
     uploadText: String,
     useBeforeRead: Boolean,
+    afterRead: null,
+    beforeRead: null,
     previewSize: {
       type: null,
-      value: 90
+      value: 80,
     },
     name: {
-      type: [Number, String],
-      value: ''
+      type: null,
+      value: '',
     },
     accept: {
       type: String,
-      value: 'image'
-    },
-    sizeType: {
-      type: Array,
-      value: ['original', 'compressed']
-    },
-    capture: {
-      type: Array,
-      value: ['album', 'camera']
+      value: 'image',
     },
     fileList: {
       type: Array,
       value: [],
-      observer: 'formatFileList'
+      observer: 'formatFileList',
     },
     maxSize: {
       type: Number,
-      value: Number.MAX_VALUE
+      value: Number.MAX_VALUE,
     },
     maxCount: {
       type: Number,
-      value: 100
+      value: 100,
     },
     deletable: {
       type: Boolean,
-      value: true
+      value: true,
     },
     showUpload: {
       type: Boolean,
-      value: true
+      value: true,
     },
     previewImage: {
       type: Boolean,
-      value: true
+      value: true,
     },
     previewFullImage: {
       type: Boolean,
-      value: true
+      value: true,
     },
     imageFit: {
       type: String,
-      value: 'scaleToFill'
-    },
-    camera: {
-      type: String,
-      value: 'back'
-    },
-    compressed: {
-      type: Boolean,
-      value: true
-    },
-    maxDuration: {
-      type: Number,
-      value: 60
+      value: 'scaleToFill',
     },
     uploadIcon: {
       type: String,
-      value: 'plus'
-    }
+      value: 'photograph',
+    },
+    ...chooseImageProps,
+    ...chooseVideoProps,
   },
 
   data: {
-    lists: [],
-    computedPreviewSize: '',
-    isInCount: true
+    lists: [] as File[],
+    isInCount: true,
   },
 
   methods: {
     formatFileList() {
       const { fileList = [], maxCount } = this.data;
-      const lists = fileList.map(item => ({
+      const lists = fileList.map((item) => ({
         ...item,
-        isImage:
-          typeof item.isImage === 'undefined' ? isImageFile(item) : item.isImage
+        isImage: isImageFile(item),
+        isVideo: isVideoFile(item),
+        deletable: isBoolean(item.deletable) ? item.deletable : true,
       }));
+
       this.setData({ lists, isInCount: lists.length < maxCount });
     },
 
+    getDetail(index?: number) {
+      return {
+        name: this.data.name,
+        index: index == null ? this.data.fileList.length : index,
+      };
+    },
+
     startUpload() {
-      if (this.data.disabled) return;
-      const {
-        name = '',
-        capture,
-        maxCount,
-        multiple,
-        maxSize,
-        accept,
-        sizeType,
-        lists,
-        camera,
-        compressed,
-        maxDuration,
-        useBeforeRead = false // 是否定义了 beforeRead
-      } = this.data;
+      const { maxCount, multiple, lists, disabled } = this.data;
 
-      let chooseFile = null;
-      const newMaxCount = maxCount - lists.length;
-      // 设置为只选择图片的时候使用 chooseImage 来实现
-      if (accept === 'image') {
-        chooseFile = new Promise((resolve, reject) => {
-          wx.chooseImage({
-            count: multiple ? (newMaxCount > 9 ? 9 : newMaxCount) : 1, // 最多可以选择的数量，如果不支持多选则数量为1
-            sourceType: capture, // 选择图片的来源，相册还是相机
-            sizeType,
-            success: resolve,
-            fail: reject
-          });
-        });
-      } else if (accept === 'video') {
-        chooseFile = new Promise((resolve, reject) => {
-          wx.chooseVideo({
-            sourceType: capture,
-            compressed,
-            maxDuration,
-            camera,
-            success: resolve,
-            fail: reject
-          });
-        });
-      } else {
-        chooseFile = new Promise((resolve, reject) => {
-          wx.chooseMessageFile({
-            count: multiple ? newMaxCount : 1, // 最多可以选择的数量，如果不支持多选则数量为1
-            type: 'file',
-            success: resolve,
-            fail: reject
-          });
-        });
-      }
+      if (disabled) return;
 
-      chooseFile
-        .then(
-          (
-            res:
-              | WechatMiniprogram.ChooseImageSuccessCallbackResult
-              | WechatMiniprogram.ChooseMessageFileSuccessCallbackResult
-              | WechatMiniprogram.ChooseVideoSuccessCallbackResult
-          ) => {
-            let file = null;
-
-            if (isVideo(res, accept)) {
-              file = {
-                path: res.tempFilePath,
-                ...res
-              };
-            } else {
-              file = multiple ? res.tempFiles : res.tempFiles[0];
-            }
-
-            // 检查文件大小
-            if (file instanceof Array) {
-              const sizeEnable = file.every(item => item.size <= maxSize);
-              if (!sizeEnable) {
-                this.$emit('oversize', { name });
-                return;
-              }
-            } else if (file.size > maxSize) {
-              this.$emit('oversize', { name });
-              return;
-            }
-
-            // 触发上传之前的钩子函数
-            if (useBeforeRead) {
-              this.$emit('before-read', {
-                file,
-                name,
-                callback: (result: boolean) => {
-                  if (result) {
-                    // 开始上传
-                    this.$emit('after-read', { file, name });
-                  }
-                }
-              });
-            } else {
-              this.$emit('after-read', { file, name });
-            }
-          }
-        )
-        .catch(error => {
+      chooseFile({
+        ...this.data,
+        maxCount: maxCount - lists.length,
+      })
+        .then((res) => {
+          this.onBeforeRead(multiple ? res : res[0]);
+        })
+        .catch((error) => {
           this.$emit('error', error);
         });
     },
 
-    deleteItem(event) {
-      const { index } = event.currentTarget.dataset;
-      this.$emit('delete', { index, name: this.data.name });
+    onBeforeRead(file: File) {
+      const { beforeRead, useBeforeRead } = this.data;
+      let res: boolean | Promise<void> = true;
+
+      if (typeof beforeRead === 'function') {
+        res = beforeRead(file, this.getDetail());
+      }
+
+      if (useBeforeRead) {
+        res = new Promise<void>((resolve, reject) => {
+          this.$emit('before-read', {
+            file,
+            ...this.getDetail(),
+            callback: (ok: boolean) => {
+              ok ? resolve() : reject();
+            },
+          });
+        });
+      }
+
+      if (!res) {
+        return;
+      }
+
+      if (isPromise(res)) {
+        res.then((data: any) => this.onAfterRead(data || file));
+      } else {
+        this.onAfterRead(file);
+      }
     },
 
-    doPreviewImage(event) {
-      if (!this.data.previewFullImage) return;
-      const curUrl = event.currentTarget.dataset.url;
-      const images = this.data.lists
-        .filter(item => item.isImage)
-        .map(item => item.url || item.path);
+    onAfterRead(file) {
+      const { maxSize, afterRead } = this.data;
+      const oversize = Array.isArray(file)
+        ? file.some((item) => item.size > maxSize)
+        : file.size > maxSize;
 
-      this.$emit('click-preview', { url: curUrl, name: this.data.name });
+      if (oversize) {
+        this.$emit('oversize', { file, ...this.getDetail() });
+        return;
+      }
+
+      if (typeof afterRead === 'function') {
+        afterRead(file, this.getDetail());
+      }
+
+      this.$emit('after-read', { file, ...this.getDetail() });
+    },
+
+    deleteItem(event) {
+      const { index } = event.currentTarget.dataset;
+
+      this.$emit('delete', {
+        ...this.getDetail(index),
+        file: this.data.fileList[index],
+      });
+    },
+
+    onPreviewImage(event) {
+      if (!this.data.previewFullImage) return;
+
+      const { index } = event.currentTarget.dataset;
+      const { lists } = this.data;
+      const item = lists[index];
 
       wx.previewImage({
-        urls: images,
-        current: curUrl,
+        urls: lists.filter((item) => isImageFile(item)).map((item) => item.url),
+        current: item.url,
         fail() {
           wx.showToast({ title: '预览图片失败', icon: 'none' });
-        }
+        },
       });
-    }
-  }
+    },
+
+    onPreviewVideo(event) {
+      if (!this.data.previewFullImage) return;
+      const { index } = event.currentTarget.dataset;
+      const { lists } = this.data as { lists: File[] };
+
+      wx.previewMedia({
+        sources: lists
+          .filter((item) => isVideoFile(item))
+          .map((item) => ({
+            ...item,
+            type: 'video',
+          })),
+        current: index,
+        fail() {
+          wx.showToast({ title: '预览视频失败', icon: 'none' });
+        },
+      });
+    },
+
+    onPreviewFile(event: WechatMiniprogram.TouchEvent) {
+      const { index } = event.currentTarget.dataset;
+
+      wx.openDocument({
+        filePath: this.data.lists[index].url,
+        showMenu: true,
+      });
+    },
+
+    onClickPreview(event) {
+      const { index } = event.currentTarget.dataset;
+      const item: File = this.data.lists[index];
+
+      this.$emit('click-preview', {
+        ...item,
+        ...this.getDetail(index),
+      });
+    },
+  },
 });

@@ -1,5 +1,5 @@
 import { VantComponent } from '../common/component';
-import { Weapp } from 'definitions/weapp';
+import { canIUseModel } from '../common/version';
 
 VantComponent({
   field: true,
@@ -19,36 +19,38 @@ VantComponent({
     useRightIconSlot: Boolean,
     leftIcon: {
       type: String,
-      value: 'search'
+      value: 'search',
     },
     rightIcon: String,
     placeholder: String,
     placeholderStyle: String,
     actionText: {
       type: String,
-      value: '取消'
+      value: '取消',
     },
     background: {
       type: String,
-      value: '#ffffff'
+      value: '#ffffff',
     },
     maxlength: {
       type: Number,
-      value: -1
+      value: -1,
     },
     shape: {
       type: String,
-      value: 'square'
+      value: 'square',
     },
     clearable: {
       type: Boolean,
-      value: true
-    }
+      value: true,
+    },
   },
 
   methods: {
-    onChange(event: Weapp.Event) {
-      this.setData({ value: event.detail });
+    onChange(event: WechatMiniprogram.CustomEvent) {
+      if (canIUseModel()) {
+        this.setData({ value: event.detail });
+      }
       this.$emit('change', event.detail);
     },
 
@@ -58,26 +60,28 @@ VantComponent({
        * https://github.com/youzan/@vant/weapp/issues/1768
        */
       setTimeout(() => {
-        this.setData({ value: '' });
+        if (canIUseModel()) {
+          this.setData({ value: '' });
+        }
         this.$emit('cancel');
         this.$emit('change', '');
       }, 200);
     },
 
-    onSearch() {
-      this.$emit('search', this.data.value);
+    onSearch(event: WechatMiniprogram.CustomEvent) {
+      this.$emit('search', event.detail);
     },
 
-    onFocus() {
-      this.$emit('focus');
+    onFocus(event: WechatMiniprogram.CustomEvent) {
+      this.$emit('focus', event.detail);
     },
 
-    onBlur() {
-      this.$emit('blur');
+    onBlur(event: WechatMiniprogram.CustomEvent) {
+      this.$emit('blur', event.detail);
     },
 
-    onClear() {
-      this.$emit('clear');
+    onClear(event: WechatMiniprogram.CustomEvent) {
+      this.$emit('clear', event.detail);
     },
-  }
+  },
 });

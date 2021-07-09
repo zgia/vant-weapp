@@ -1,5 +1,4 @@
-import { Weapp } from 'definitions/weapp';
-
+// @ts-nocheck
 const MIN_DISTANCE = 10;
 
 function getDirection(x: number, y: number) {
@@ -24,20 +23,21 @@ export const touch = Behavior({
       this.offsetY = 0;
     },
 
-    touchStart(event: Weapp.TouchEvent) {
+    touchStart(event: WechatMiniprogram.TouchEvent) {
       this.resetTouchStatus();
       const touch = event.touches[0];
       this.startX = touch.clientX;
       this.startY = touch.clientY;
     },
 
-    touchMove(event: Weapp.TouchEvent) {
+    touchMove(event: WechatMiniprogram.TouchEvent) {
       const touch = event.touches[0];
       this.deltaX = touch.clientX - this.startX;
       this.deltaY = touch.clientY - this.startY;
       this.offsetX = Math.abs(this.deltaX);
       this.offsetY = Math.abs(this.deltaY);
-      this.direction = this.direction || getDirection(this.offsetX, this.offsetY);
-    }
-  }
+      this.direction =
+        this.direction || getDirection(this.offsetX, this.offsetY);
+    },
+  },
 });

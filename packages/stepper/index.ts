@@ -1,6 +1,5 @@
 import { VantComponent } from '../common/component';
-import { Weapp } from 'definitions/weapp';
-import { isDef } from '../common/utils';
+import { isDef } from '../common/validator';
 
 const LONG_PRESS_START_TIME = 600;
 const LONG_PRESS_INTERVAL = 200;
@@ -23,67 +22,72 @@ VantComponent({
   props: {
     value: {
       type: null,
-      observer(value) {
-        if (!equal(value, this.data.currentValue)) {
-          this.setData({ currentValue: this.format(value) });
-        }
-      }
+      observer: 'observeValue',
     },
     integer: {
       type: Boolean,
-      observer: 'check'
+      observer: 'check',
     },
     disabled: Boolean,
-    inputWidth: null,
-    buttonSize: null,
+    inputWidth: String,
+    buttonSize: String,
     asyncChange: Boolean,
     disableInput: Boolean,
     decimalLength: {
       type: Number,
-      value: null,
-      observer: 'check'
+      value: (null as unknown) as number,
+      observer: 'check',
     },
     min: {
       type: null,
       value: 1,
-      observer: 'check'
+      observer: 'check',
     },
     max: {
       type: null,
       value: Number.MAX_SAFE_INTEGER,
-      observer: 'check'
+      observer: 'check',
     },
     step: {
       type: null,
-      value: 1
+      value: 1,
     },
     showPlus: {
       type: Boolean,
-      value: true
+      value: true,
     },
     showMinus: {
       type: Boolean,
-      value: true
+      value: true,
     },
     disablePlus: Boolean,
     disableMinus: Boolean,
     longPress: {
       type: Boolean,
-      value: true
-    }
+      value: true,
+    },
+    theme: String,
   },
 
   data: {
-    currentValue: ''
+    currentValue: '',
   },
 
   created() {
     this.setData({
-      currentValue: this.format(this.data.value)
+      currentValue: this.format(this.data.value),
     });
   },
 
   methods: {
+    observeValue() {
+      const { value, currentValue } = this.data;
+
+      if (!equal(value, currentValue)) {
+        this.setData({ currentValue: this.format(value) });
+      }
+    },
+
     check() {
       const val = this.format(this.data.currentValue);
       if (!equal(val, this.data.currentValue)) {
@@ -92,31 +96,32 @@ VantComponent({
     },
 
     isDisabled(type: string) {
+      const {
+        disabled,
+        disablePlus,
+        disableMinus,
+        currentValue,
+        max,
+        min,
+      } = this.data;
+
       if (type === 'plus') {
-        return (
-          this.data.disabled ||
-          this.data.disablePlus ||
-          this.data.currentValue >= this.data.max
-        );
+        return disabled || disablePlus || currentValue >= max;
       }
 
-      return (
-        this.data.disabled ||
-        this.data.disableMinus ||
-        this.data.currentValue <= this.data.min
-      );
+      return disabled || disableMinus || currentValue <= min;
     },
 
-    onFocus(event: Weapp.Event) {
+    onFocus(event: WechatMiniprogram.InputFocus) {
       this.$emit('focus', event.detail);
     },
 
-    onBlur(event: Weapp.Event) {
+    onBlur(event: WechatMiniprogram.InputBlur) {
       const value = this.format(event.detail.value);
       this.emitChange(value);
       this.$emit('blur', {
         ...event.detail,
-        value
+        value,
       });
     },
 
@@ -147,7 +152,7 @@ VantComponent({
       return value;
     },
 
-    onInput(event: Weapp.Event) {
+    onInput(event: WechatMiniprogram.Input) {
       const { value = '' } = event.detail || {};
 
       // allow input to be empty
@@ -176,6 +181,7 @@ VantComponent({
 
     onChange() {
       const { type } = this;
+
       if (this.isDisabled(type)) {
         this.$emit('overlimit', type);
         return;
@@ -196,13 +202,13 @@ VantComponent({
       }, LONG_PRESS_INTERVAL);
     },
 
-    onTap(event: Weapp.Event) {
+    onTap(event: WechatMiniprogram.TouchEvent) {
       const { type } = event.currentTarget.dataset;
       this.type = type;
       this.onChange();
     },
 
-    onTouchStart(event: Weapp.Event) {
+    onTouchStart(event: WechatMiniprogram.TouchEvent) {
       if (!this.data.longPress) {
         return;
       }
@@ -223,7 +229,8 @@ VantComponent({
       if (!this.data.longPress) {
         return;
       }
+
       clearTimeout(this.longPressTimer);
-    }
-  }
+    },
+  },
 });

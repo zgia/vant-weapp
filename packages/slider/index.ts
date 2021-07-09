@@ -1,7 +1,7 @@
 import { VantComponent } from '../common/component';
 import { touch } from '../mixins/touch';
-import { Weapp } from 'definitions/weapp';
-import { addUnit } from '../common/utils';
+import { canIUseModel } from '../common/version';
+import { getRect } from '../common/utils';
 
 VantComponent({
   mixins: [touch],
@@ -13,27 +13,26 @@ VantComponent({
     inactiveColor: String,
     max: {
       type: Number,
-      value: 100
+      value: 100,
     },
     min: {
       type: Number,
-      value: 0
+      value: 0,
     },
     step: {
       type: Number,
-      value: 1
+      value: 1,
     },
     value: {
       type: Number,
       value: 0,
-      observer(value: number) {
-        this.updateValue(value, false);
-      }
+      observer(val) {
+        if (val !== this.value) {
+          this.updateValue(val);
+        }
+      },
     },
-    barHeight: {
-      type: null,
-      value: '2px'
-    }
+    barHeight: null,
   },
 
   created() {
@@ -41,15 +40,15 @@ VantComponent({
   },
 
   methods: {
-    onTouchStart(event: Weapp.TouchEvent) {
+    onTouchStart(event: WechatMiniprogram.TouchEvent) {
       if (this.data.disabled) return;
 
       this.touchStart(event);
-      this.startValue = this.format(this.data.value);
+      this.startValue = this.format(this.value);
       this.dragStatus = 'start';
     },
 
-    onTouchMove(event: Weapp.TouchEvent) {
+    onTouchMove(event: WechatMiniprogram.TouchEvent) {
       if (this.data.disabled) return;
 
       if (this.dragStatus === 'start') {
@@ -59,8 +58,8 @@ VantComponent({
       this.touchMove(event);
       this.dragStatus = 'draging';
 
-      this.getRect('.van-slider').then((rect: WechatMiniprogram.BoundingClientRectCallbackResult) => {
-        const diff = (this.deltaX / rect.width) * 100;
+      getRect(this, '.van-slider').then((rect) => {
+        const diff = (this.deltaX / rect.width) * this.getRange();
         this.newValue = this.startValue + diff;
         this.updateValue(this.newValue, false, true);
       });
@@ -75,27 +74,28 @@ VantComponent({
       }
     },
 
-    onClick(event: Weapp.TouchEvent) {
+    onClick(event: WechatMiniprogram.TouchEvent) {
       if (this.data.disabled) return;
 
       const { min } = this.data;
 
-      this.getRect('.van-slider').then((rect: WechatMiniprogram.BoundingClientRectCallbackResult) => {
-        const value = ((event.detail.x - rect.left) / rect.width) * this.getRange() + min;
+      getRect(this, '.van-slider').then((rect) => {
+        const value =
+          ((event.detail.x - rect.left) / rect.width) * this.getRange() + min;
         this.updateValue(value, true);
       });
     },
 
-    updateValue(value: number, end: boolean, drag: boolean) {
+    updateValue(value: number, end?: boolean, drag?: boolean) {
       value = this.format(value);
-      const { barHeight, min } = this.data;
+      const { min } = this.data;
       const width = `${((value - min) * 100) / this.getRange()}%`;
 
+      this.value = value;
+
       this.setData({
-        value,
         barStyle: `
           width: ${width};
-          height: ${addUnit(barHeight)};
           ${drag ? 'transition: none;' : ''}
         `,
       });
@@ -107,6 +107,10 @@ VantComponent({
       if (end) {
         this.$emit('change', value);
       }
+
+      if ((drag || end) && canIUseModel()) {
+        this.setData({ value });
+      }
     },
 
     getRange() {
@@ -117,6 +121,6 @@ VantComponent({
     format(value: number) {
       const { max, min, step } = this.data;
       return Math.round(Math.max(min, Math.min(value, max)) / step) * step;
-    }
-  }
+    },
+  },
 });

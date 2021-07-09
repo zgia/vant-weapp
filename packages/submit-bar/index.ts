@@ -1,23 +1,18 @@
 import { VantComponent } from '../common/component';
-import { Weapp } from 'definitions/weapp';
 
 VantComponent({
-  classes: [
-    'bar-class',
-    'price-class',
-    'button-class'
-  ],
+  classes: ['bar-class', 'price-class', 'button-class'],
 
   props: {
     tip: {
       type: null,
-      observer: 'updateTip'
+      observer: 'updateTip',
     },
     tipIcon: String,
     type: Number,
     price: {
       type: null,
-      observer: 'updatePrice'
+      observer: 'updatePrice',
     },
     label: String,
     loading: Boolean,
@@ -25,32 +20,34 @@ VantComponent({
     buttonText: String,
     currency: {
       type: String,
-      value: '¥'
+      value: '¥',
     },
     buttonType: {
       type: String,
-      value: 'danger'
+      value: 'danger',
     },
     decimalLength: {
       type: Number,
       value: 2,
-      observer: 'updatePrice'
+      observer: 'updatePrice',
     },
     suffixLabel: String,
     safeAreaInsetBottom: {
       type: Boolean,
-      value: true
-    }
+      value: true,
+    },
   },
 
   methods: {
     updatePrice() {
       const { price, decimalLength } = this.data;
-      const priceStrArr = typeof price === 'number' && (price / 100).toFixed(decimalLength).split('.');
+      const priceStrArr =
+        typeof price === 'number' &&
+        (price / 100).toFixed(decimalLength).split('.');
       this.setData({
         hasPrice: typeof price === 'number',
         integerStr: priceStrArr && priceStrArr[0],
-        decimalStr: decimalLength && priceStrArr ? `.${priceStrArr[1]}` : ''
+        decimalStr: decimalLength && priceStrArr ? `.${priceStrArr[1]}` : '',
       });
     },
 
@@ -58,8 +55,8 @@ VantComponent({
       this.setData({ hasTip: typeof this.data.tip === 'string' });
     },
 
-    onSubmit(event: Weapp.Event) {
+    onSubmit(event: WechatMiniprogram.CustomEvent) {
       this.$emit('submit', event.detail);
-    }
-  }
+    },
+  },
 });

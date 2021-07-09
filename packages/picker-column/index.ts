@@ -1,6 +1,6 @@
 import { VantComponent } from '../common/component';
-import { isObj, range } from '../common/utils';
-import { Weapp } from 'definitions/weapp';
+import { range } from '../common/utils';
+import { isObj } from '../common/validator';
 
 const DEFAULT_DURATION = 200;
 
@@ -14,15 +14,15 @@ VantComponent({
     visibleItemCount: Number,
     initialOptions: {
       type: Array,
-      value: []
+      value: [],
     },
     defaultIndex: {
       type: Number,
       value: 0,
       observer(value: number) {
         this.setIndex(value);
-      }
-    }
+      },
+    },
   },
 
   data: {
@@ -31,7 +31,7 @@ VantComponent({
     duration: 0,
     startOffset: 0,
     options: [],
-    currentIndex: 0
+    currentIndex: 0,
   },
 
   created() {
@@ -39,7 +39,7 @@ VantComponent({
 
     this.set({
       currentIndex: defaultIndex,
-      options: initialOptions
+      options: initialOptions,
     }).then(() => {
       this.setIndex(defaultIndex);
     });
@@ -50,15 +50,15 @@ VantComponent({
       return this.data.options.length;
     },
 
-    onTouchStart(event: Weapp.TouchEvent) {
+    onTouchStart(event: WechatMiniprogram.TouchEvent) {
       this.setData({
         startY: event.touches[0].clientY,
         startOffset: this.data.offset,
-        duration: 0
+        duration: 0,
       });
     },
 
-    onTouchMove(event: Weapp.TouchEvent) {
+    onTouchMove(event: WechatMiniprogram.TouchEvent) {
       const { data } = this;
       const deltaY = event.touches[0].clientY - data.startY;
       this.setData({
@@ -66,7 +66,7 @@ VantComponent({
           data.startOffset + deltaY,
           -(this.getCount() * data.itemHeight),
           data.itemHeight
-        )
+        ),
       });
     },
 
@@ -84,7 +84,7 @@ VantComponent({
       }
     },
 
-    onClickItem(event: Weapp.Event) {
+    onClickItem(event: WechatMiniprogram.TouchEvent) {
       const { index } = event.currentTarget.dataset;
       this.setIndex(index, true);
     },
@@ -113,7 +113,7 @@ VantComponent({
         : option;
     },
 
-    setIndex(index: number, userAction: boolean) {
+    setIndex(index: number, userAction?: boolean) {
       const { data } = this;
       index = this.adjustIndex(index) || 0;
       const offset = -index * data.itemHeight;
@@ -140,6 +140,6 @@ VantComponent({
     getValue() {
       const { data } = this;
       return data.options[data.currentIndex];
-    }
-  }
+    },
+  },
 });

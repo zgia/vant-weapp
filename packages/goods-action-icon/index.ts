@@ -1,13 +1,11 @@
 import { VantComponent } from '../common/component';
-import { link } from '../mixins/link';
 import { button } from '../mixins/button';
-import { openType } from '../mixins/open-type';
-import { Weapp } from 'definitions/weapp';
+import { link } from '../mixins/link';
 
 VantComponent({
   classes: ['icon-class', 'text-class'],
 
-  mixins: [link, button, openType],
+  mixins: [link, button],
 
   props: {
     text: String,
@@ -15,13 +13,13 @@ VantComponent({
     info: String,
     icon: String,
     disabled: Boolean,
-    loading: Boolean
+    loading: Boolean,
   },
 
   methods: {
-    onClick(event: Weapp.Event) {
+    onClick(event: WechatMiniprogram.CustomEvent) {
       this.$emit('click', event.detail);
       this.jumpLink();
-    }
-  }
+    },
+  },
 });

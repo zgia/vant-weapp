@@ -1,74 +1,24 @@
 import { basic } from '../mixins/basic';
-import { VantComponentOptions, CombinedComponentInstance } from 'definitions/index';
+import { VantComponentOptions } from 'definitions/index';
 
-const relationFunctions = {
-  ancestor: {
-    linked(parent) {
-      this.parent = parent;
-    },
-    unlinked() {
-      this.parent = null;
-    },
-  },
-  descendant: {
-    linked(child) {
-      this.children = this.children || [];
-      this.children.push(child);
-    },
-    unlinked(child) {
-      this.children = (this.children || []).filter(it => it !== child);
-    },
-  },
-};
-
-function mapKeys(source: object, target: object, map: object) {
-  Object.keys(map).forEach(key => {
+function mapKeys(
+  source: Record<string, any>,
+  target: Record<string, any>,
+  map: Record<string, any>
+) {
+  Object.keys(map).forEach((key) => {
     if (source[key]) {
       target[map[key]] = source[key];
     }
   });
 }
 
-function makeRelation(options, vantOptions, relation) {
-  const { type, name, linked, unlinked, linkChanged } = relation;
-  const { beforeCreate, destroyed } = vantOptions;
-  if (type === 'descendant') {
-    options.created = function () {
-      beforeCreate && beforeCreate.bind(this)();
-      this.children = this.children || [];
-    };
-    options.detached = function () {
-      this.children = [];
-      destroyed && destroyed.bind(this)();
-    };
-  }
-  options.relations = Object.assign(options.relations || {}, {
-    [`../${name}/index`]: {
-      type,
-      linked(node) {
-        relationFunctions[type].linked.bind(this)(node);
-        linked && linked.bind(this)(node);
-      },
-      linkChanged(node) {
-        linkChanged && linkChanged.bind(this)(node);
-      },
-      unlinked(node) {
-        relationFunctions[type].unlinked.bind(this)(node);
-        unlinked && unlinked.bind(this)(node);
-      },
-    }
-  });
-}
-
-function VantComponent<Data, Props, Methods>(
-  vantOptions: VantComponentOptions<
-    Data,
-    Props,
-    Methods,
-    CombinedComponentInstance<Data, Props, Methods>
-  > = {}
-): void {
-  const options: any = {};
+function VantComponent<
+  Data extends WechatMiniprogram.Component.DataOption,
+  Props extends WechatMiniprogram.Component.PropertyOption,
+  Methods extends WechatMiniprogram.Component.MethodOption
+>(vantOptions: VantComponentOptions<Data, Props, Methods>): void {
+  const options: WechatMiniprogram.Component.Options<Data, Props, Methods> = {};
 
   mapKeys(vantOptions, options, {
     data: 'data',
@@ -78,15 +28,9 @@ function VantComponent<Data, Props, Methods>(
     beforeCreate: 'created',
     created: 'attached',
     mounted: 'ready',
-    relations: 'relations',
     destroyed: 'detached',
-    classes: 'externalClasses'
+    classes: 'externalClasses',
   });
-
-  const { relation } = vantOptions;
-  if (relation) {
-    makeRelation(options, vantOptions, relation);
-  }
 
   // add default externalClasses
   options.externalClasses = options.externalClasses || [];
@@ -96,24 +40,22 @@ function VantComponent<Data, Props, Methods>(
   options.behaviors = options.behaviors || [];
   options.behaviors.push(basic);
 
+  // add relations
+  const { relation } = vantOptions;
+  if (relation) {
+    options.relations = relation.relations;
+    options.behaviors.push(relation.mixin);
+  }
+
   // map field to form-field behavior
   if (vantOptions.field) {
     options.behaviors.push('wx://form-field');
   }
 
-  if (options.properties) {
-    Object.keys(options.properties).forEach(name => {
-      if (Array.isArray(options.properties[name])) {
-        // miniprogram do not allow multi type
-        options.properties[name] = null;
-      }
-    });
-  }
-
   // add default options
   options.options = {
     multipleSlots: true,
-    addGlobalClass: true
+    addGlobalClass: true,
   };
 
   Component(options);

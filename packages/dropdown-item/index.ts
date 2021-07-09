@@ -1,51 +1,47 @@
+import { useParent } from '../common/relation';
 import { VantComponent } from '../common/component';
-import { Weapp } from 'definitions/weapp';
+import { Option } from './shared';
 
 VantComponent({
   field: true,
 
-  relation: {
-    name: 'dropdown-menu',
-    type: 'ancestor',
-    current: 'dropdown-item',
-    linked() {
-      this.updateDataFromParent();
-    }
-  },
+  relation: useParent('dropdown-menu', function () {
+    this.updateDataFromParent();
+  }),
 
   props: {
     value: {
       type: null,
-      observer: 'rerender'
+      observer: 'rerender',
     },
     title: {
       type: String,
-      observer: 'rerender'
+      observer: 'rerender',
     },
     disabled: Boolean,
     titleClass: {
       type: String,
-      observer: 'rerender'
+      observer: 'rerender',
     },
     options: {
       type: Array,
       value: [],
-      observer: 'rerender'
+      observer: 'rerender',
     },
-    popupStyle: String
+    popupStyle: String,
   },
 
   data: {
     transition: true,
     showPopup: false,
     showWrapper: false,
-    displayTitle: ''
+    displayTitle: '',
   },
 
   methods: {
     rerender() {
       wx.nextTick(() => {
-        this.parent && this.parent.updateItemListData();
+        this.parent?.updateItemListData();
       });
     },
 
@@ -56,14 +52,15 @@ VantComponent({
           duration,
           activeColor,
           closeOnClickOverlay,
-          direction
+          direction,
         } = this.parent.data;
+
         this.setData({
           overlay,
           duration,
           activeColor,
           closeOnClickOverlay,
-          direction
+          direction,
         });
       }
     },
@@ -85,9 +82,9 @@ VantComponent({
       this.setData({ showWrapper: false });
     },
 
-    onOptionTap(event: Weapp.Event) {
+    onOptionTap(event: WechatMiniprogram.TouchEvent) {
       const { option } = event.currentTarget.dataset;
-      const { value } = option;
+      const { value } = (option as unknown) as Option;
 
       const shouldEmitChange = this.data.value !== value;
       this.setData({ showPopup: false, value });
@@ -100,7 +97,7 @@ VantComponent({
       }
     },
 
-    toggle(show, options = {}) {
+    toggle(show?: boolean, options: { immediate?: boolean } = {}) {
       const { showPopup } = this.data;
 
       if (typeof show !== 'boolean') {
@@ -117,13 +114,13 @@ VantComponent({
       });
 
       if (show) {
-        this.parent.getChildWrapperStyle().then((wrapperStyle: string) => {
+        this.parent?.getChildWrapperStyle().then((wrapperStyle: string) => {
           this.setData({ wrapperStyle, showWrapper: true });
           this.rerender();
         });
       } else {
         this.rerender();
       }
-    }
-  }
+    },
+  },
 });

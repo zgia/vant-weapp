@@ -11,16 +11,20 @@
 </p>
 
 <p align="center">
-  🔥 <a href="https://youzan.github.io/vant-weapp">文档网站</a>
+  🔥 <a href="https://vant-contrib.gitee.io/vant-weapp">文档网站（国内）</a>
+  &nbsp;
+  🌈 <a href="https://youzan.github.io/vant-weapp">文档网站（GitHub）</a>
   &nbsp;
   🚀 <a href="https://github.com/youzan/vant" target="_blank">Vue 版</a>
 </p>
 
 ---
 
-## 介绍
+### 介绍
 
-Vant Weapp 是移动端 Vue 组件库 [Vant](https://github.com/youzan/vant) 的小程序版本，两者基于相同的视觉规范，提供一致的 API 接口，助力开发者快速搭建小程序应用。
+Vant 是**有赞前端团队**开源的移动端组件库，于 2017 年开源，已持续维护 4 年时间。Vant 对内承载了有赞所有核心业务，对外服务十多万开发者，是业界主流的移动端组件库之一。
+
+目前 Vant 官方提供了 [Vue 2 版本](https://vant-contrib.gitee.io/vant)、[Vue 3 版本](https://vant-contrib.gitee.io/vant/v3)和[微信小程序版本](http://vant-contrib.gitee.io/vant-weapp)，并由社区团队维护 [React 版本](https://github.com/mxdi9i7/vant-react)和[支付宝小程序版本](https://github.com/ant-move/Vant-Aliapp)。
 
 ## 预览
 
@@ -84,38 +88,20 @@ npm install
 npm run dev
 ```
 
-打开[微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)，把`vant-weapp/example`目录添加进去就可以预览示例了。
+打开[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)，把`vant-weapp/example`目录添加进去就可以预览示例了。
+
+PS：关于 `van-area`  Area 省市区选择组件，地区数据初始化可以直接在云开发环境中导入`vant-weapp/example/database_area.JSON`文件使用
 
 ## 基础库版本
 
-Vant Weapp 最低支持到小程序基础库 1.9.9 版本
-
-## 微信讨论群
-
-欢迎大家在微信上联系我们，添加下方微信并注明『交流 vant-weapp』即可
-
-<img src="https://img.yzcdn.cn/vant/wechat_20180606.png" width="220" height="292" >
-
-## 加入我们
-
-**有赞前端团队**是由一群年轻、皮实、对技术饱含热情的小伙伴组成的，目前共有 100 多名前端工程师，分布在业务中台、电商、零售、美业、资产、赋能等业务线。
-
-我们热爱分享和开源，崇尚用工程师的方式解决问题，因此造了很多工具来解决我们遇到的问题，目前我们维护的开源产品有：
-
-<img src="https://img.yzcdn.cn/public_files/2019/07/22/f4b70763c55c8710c52c667ecf192c05.jpeg" width="320" height="303">
-
-我们正在寻找更多优秀的小伙伴，一起拓展前端技术的边界，期待你的加入！
-
-- <a target="_blank" href="https://app.mokahr.com/apply/youzan/6252#/job/96f5d2c7-e657-4d31-9244-195edc443a7f?_k=jf2141">职位详情</a>（Base: 杭州/深圳）
-- <a target="_blank" href="https://tech.youzan.com/tag/front-end/">团队博客</a>
-- <a target="_blank" href="https://github.com/youzan">开源项目</a>
+Vant Weapp 最低支持到小程序基础库 2.2.3 版本
 
 ## 链接
 
 * [更新日志](https://github.com/youzan/vant-weapp/blob/dev/docs/markdown/changelog.md)
 * [意见反馈](https://github.com/youzan/vant-weapp/issues)
 * [加入我们](https://job.youzan.com)
-* [Vant: 移动端 Vue UI](https://github.com/youzan/vant)
+* [Vant Vue 版](https://github.com/youzan/vant)
 
 ## 开源协议
 
@@ -125,6 +111,6 @@ Vant Weapp 最低支持到小程序基础库 1.9.9 版本
 [issue]: https://github.com/youzan/vant-weapp/issues/new
 [PR]: https://github.com/youzan/vant-weapp/compare
 [MIT]: http://opensource.org/licenses/MIT
-[小程序简易教程]: https://mp.weixin.qq.com/debug/wxadoc/dev/
-[小程序框架介绍]: https://mp.weixin.qq.com/debug/wxadoc/dev/framework/MINA.html
-[微信开发者工具]: https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html
+[小程序简易教程]: https://developers.weixin.qq.com/miniprogram/dev/framework/
+[小程序框架介绍]: https://developers.weixin.qq.com/miniprogram/dev/framework/MINA.html
+[微信开发者工具]: https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
